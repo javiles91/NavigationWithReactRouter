@@ -1,32 +1,11 @@
 import React, { useState, useEffect } from "react";
 import jwt_decode from "jwt-decode";
+import { connect } from "react-redux";
+import { signIn, signOut, updateEmail } from "../actions";
 
-function GoogleAuth() {
-  const [isSignedIn, setIsSignedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [userName, setUserName] = useState("");
-  const [userLastName, setUserLastName] = useState("");
-
-  //   console.log(isSignedIn);
-
-  function handleCredentialResponse(response) {
-    let decodedResponse = jwt_decode(response.credential);
-    setIsSignedIn(decodedResponse.email_verified);
-    setUserEmail(decodedResponse.email);
-    setUserName(decodedResponse.given_name);
-    setUserLastName(decodedResponse.family_name);
-    document.getElementById("buttonDiv").hidden = true;
-  }
-
-  function signOutHandler() {
-    window.google.accounts.id.revoke(userEmail, () =>
-      console.log(`consent revoked`)
-    );
-    localStorage.removeItem("email");
-    document.getElementById("buttonDiv").hidden = false;
-    setIsSignedIn(false);
-  }
-
+function GoogleAuth({ isSignedIn, updateEmail, email, signIn, signOut }) {
+  //----------------------------------------------------------------------------------------------------------
+  //IMPLEMENTING GOOGLE SIGN IN AT FIRST RENDER
   useEffect(() => {
     window.google.accounts.id.initialize({
       client_id:
@@ -37,31 +16,59 @@ function GoogleAuth() {
       document.getElementById("buttonDiv"),
       { type: "icon", theme: "outlie", size: "large" }
     );
+
+    if (isSignedIn) document.getElementById("buttonDiv").hidden = true;
   }, []);
 
-  useEffect(() => {
-    let signInStatus = JSON.parse(localStorage.getItem("signedIn"));
-    let email = JSON.parse(localStorage.getItem("email"));
-    if (signInStatus) document.getElementById("buttonDiv").hidden = true;
-    setIsSignedIn(signInStatus);
-    setUserEmail(email);
-  }, []);
+  //THIS RUNS WHEN THE USER SIGNS IN
+  function handleCredentialResponse(response) {
+    let decodedResponse = jwt_decode(response.credential);
+    onAuthChange(decodedResponse.email_verified);
+    updateEmail(decodedResponse.email);
+    document.getElementById("buttonDiv").hidden = true;
+  }
+  //------------------------------------------------------------------------------------------------------------------
 
+  //WEHN THE SIGN IN STATUS CHANGES
   useEffect(() => {
     localStorage.setItem("signedIn", JSON.stringify(isSignedIn));
-    if (isSignedIn) localStorage.setItem("email", JSON.stringify(userEmail));
+    if (isSignedIn) localStorage.setItem("email", JSON.stringify(email));
   }, [isSignedIn]);
+  //-----------------------------------------------------------------------------------------------------------------
 
-  //   localStorage.removeItem("email");
+  //  SIGN OUT HANDLER
+  function signOutHandler() {
+    window.google.accounts.id.revoke(email, () =>
+      console.log(`consent revoked`)
+    );
+    localStorage.removeItem("email");
+    updateEmail("null");
+    document.getElementById("buttonDiv").hidden = false;
+    onAuthChange(false);
+  }
+  //----------------------------------------------------------------------------------------------------------------------
+
+  function onAuthChange(isSignedIn) {
+    if (isSignedIn === true) {
+      signIn();
+    } else if (isSignedIn === false) {
+      signOut();
+    }
+  }
 
   return (
     <div>
-      {" "}
-      <div>Google Auth</div>
       {isSignedIn ? <button onClick={signOutHandler}>sign out</button> : ""}
       <div id="buttonDiv">button</div>
     </div>
   );
 }
 
-export default GoogleAuth;
+const mapStatetoProps = (state) => {
+  return { isSignedIn: state.auth.isSignedIn, email: state.email };
+};
+
+export default connect(mapStatetoProps, { signIn, signOut, updateEmail })(
+  GoogleAuth
+);
+//316

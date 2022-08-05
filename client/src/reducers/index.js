@@ -1,5 +1,7 @@
 import { combineReducers } from "redux";
+import { reducer as formReducer } from "redux-form";
 import authReducer from "./authReducer";
+import streamReducer from "./streamReducer";
 
 function emailReducer(
   email = JSON.parse(localStorage.getItem("email")),
@@ -14,4 +16,6 @@ function emailReducer(
 export default combineReducers({
   auth: authReducer,
   email: emailReducer,
+  form: formReducer,
+  streams: streamReducer,
 });
