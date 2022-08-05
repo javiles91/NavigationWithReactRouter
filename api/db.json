@@ -1,0 +1,19 @@
+{
+  "streams": [
+    {
+      "title": "jose",
+      "description": "aviles",
+      "id": 1
+    },
+    {
+      "title": "Aida",
+      "description": "avi",
+      "id": 2
+    },
+    {
+      "title": "Front end refactoring ",
+      "description": "developer refactoring",
+      "id": 4
+    }
+  ]
+}
